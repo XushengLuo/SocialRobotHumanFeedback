@@ -27,27 +27,26 @@ def human_feedback(x, human_cluster, point_cluster, obstacle):
         for i in range(nx - 1):
             # whether the line segment crosses the (obstacle)
             if LineString([Point((x[i], x[i + nx])), Point(x[i + 1], x[i + 1 + nx])]).intersects(obs):
-                score += 2
+                score += 1
                 index.add(i)
                 index.add(i+1)
-
     # the length of the trajectory
     dist = np.sum([np.linalg.norm([x[i] - x[i + 1], x[i + nx] - x[i + 1 + nx]]) for i in range(nx - 1)])
     score += dist
 
     # index
-    index_group = []
-    index = list(index)
-    index.sort()
-    for k, g in groupby(enumerate(index), lambda ix: ix[0] - ix[1]):
-        index_group.append(list(map(itemgetter(1), g)))
-    expand_index = set([j for i in index_group for j in i])
-    for group in index_group:
-        num = np.random.randint(0, 3)
-        extra = [group[0]-k for k in range(1, num+1) if group[0]-k > 0] + \
-                [group[-1]+k for k in range(1, num+1) if group[-1]+k < nx]
-        expand_index.update(set(extra))
-    return score, dist, list(expand_index)
+    # index_group = []
+    # index = list(index)
+    # index.sort()
+    # for k, g in groupby(enumerate(index), lambda ix: ix[0] - ix[1]):
+    #     index_group.append(list(map(itemgetter(1), g)))
+    # expand_index = set([j for i in index_group for j in i])
+    # for group in index_group:
+    #     num = np.random.randint(0, 3)
+    #     extra = [group[0]-k for k in range(1, num+1) if group[0]-k > 0] + \
+    #             [group[-1]+k for k in range(1, num+1) if group[-1]+k < nx]
+    #     expand_index.update(set(extra))
+    return score, dist, []  # list(expand_index)
 
 
 def get_score(point, polygon):
