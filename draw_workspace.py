@@ -43,9 +43,9 @@ def workspace_plot(path, nx, polygon, obstacle, measure, human):
         xh = [h[0] for h in human]
         yh = [h[1] for h in human]
         plt.plot(xh, yh, 'bo', markersize=3)
-        # for i in range(len(xh)):
-        #     circle = plt.Circle((xh[i], yh[i]), 0.5, color='r', fill=False)
-        #     ax.add_artist(circle)
+        for i in range(len(xh)):
+            circle = plt.Circle((xh[i], yh[i]), 0.5, color='r', fill=False)
+            ax.add_artist(circle)
     ax.set_xlim((min([min(x_pre), 0]), max(x_pre)))
     ax.set_ylim((min([min(y_pre), 0]), max(y_pre)))
 

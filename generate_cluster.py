@@ -19,6 +19,14 @@ def get_cluster(human_cluster):
     return human, point_cluster
 
 
+def update_cluster(human):
+    new_human = []
+    radius = 0.5
+    for h in human:
+        ut = np.random.random((2, 1))
+        ut = ut/np.linalg.norm(ut)
+        new_human.append((h[0]+ut[0][0]*radius, h[1]+ut[1][0]*radius))
+
 # human_cluster = {1: [(5, 5), (8, 3), (9, 3), (9, 4), (7, 7), (5, 7)],
 #                  2: [(13, 5), (15, 1), (16, 1), (16, 4), (14, 6), (13, 6)],
 #                  3: [(14, 9), (18, 9), (18, 10), (14, 10)],
