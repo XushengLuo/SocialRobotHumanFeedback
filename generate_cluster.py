@@ -7,7 +7,7 @@ from matplotlib.collections import PatchCollection
 
 def get_cluster(human_cluster):
     point_cluster = {key: [] for key in human_cluster.keys()}
-    points = np.random.random((100, 2)) * 20
+    points = np.random.random((500, 2)) * 20
     human = []
     for p in points:
         for index, polygon in human_cluster.items():

@@ -7,6 +7,7 @@ from human_feedback import human_feedback, human_feedback1
 from generate_cluster import get_cluster, update_cluster
 import sys
 import warnings
+from vis import vis
 
 traj = [(0.3, 0), (0.34, 0.09), (0.35, 0.19), (0.37, 0.29), (0.39, 0.33), (0.41, 0.42),
         (0.44, 0.51), (0.46, 0.57), (0.5, 0.65), (0.57, 0.73), (0.61, 0.78), (0.67, 0.86),
@@ -22,23 +23,24 @@ human_cluster = {1: [(5, 5), (8, 3), (9, 3), (9, 4), (7, 7), (5, 7)],
 obstacle = {1: [(10.5, 9), (12.5, 9), (12.5, 11), (10.5, 11)]}
 
 human, point_cluster = get_cluster(human_cluster)
-do_local_perturb = 0 # sys.argv[1]
+do_local_perturb = 0  # sys.argv[1]
 # zero-order parameter
-maxItr = int(1e2)
+max_period = 3
+max_itr = int(1e2)
 
 eta = 1e-1  # Note: step size rule 1 does not work well when dimension is larger than 2  1e-2
 delta = 1e1  # exploration parameter
 
 nx = np.shape(traj)[1]
-
+x_period = np.zeros((nx * 2, max_period))
+human_period = {k: [] for k in range(max_period)}
 if not do_local_perturb:
-    for t in range(20):
-        human = update_cluster(human)
-        xt = np.zeros((nx * 2, maxItr))
+    for t in range(max_period):
+        xt = np.zeros((nx * 2, max_itr))
         xt[:, 0] = np.reshape(traj, (nx * 2, 1), order='C').ravel()
-        meas = np.zeros((maxItr,))  # Distance me
+        meas = np.zeros((max_itr,))  # Distance me
         dist0 = 0
-        for i in range(maxItr - 1):
+        for i in range(max_itr - 1):
             x = np.reshape(xt[:, i], (nx * 2, 1))
             # s, dist, index = human_feedback(x, human_cluster, point_cluster, obstacle)
             s, dist, index = human_feedback1(x, human, obstacle)
@@ -66,18 +68,25 @@ if not do_local_perturb:
             gt = nx * 2 / 2 / delta * (s_plus - s_minus) * ut  # gradient
 
             xt[:, i + 1] = xt[:, i] - eta * gt.ravel()  # gradient descent
+
+        # initial traj for the next period
         traj = xt[:, i]
         print(i)
-        x = np.reshape(xt[:, i], (nx * 2, 1))
-        workspace_plot(x, nx, human_cluster, obstacle, meas, human)
-        plt.show()
+        x_period[:, t] = xt[:, i]
+        human_period[t] = human
+        # update human position
+        human = update_cluster(human)
+
+        # x = np.reshape(xt[:, i], (nx * 2, 1))
+        # workspace_plot(x, nx, human_cluster, obstacle, meas, human)
+        # plt.show()
 
 elif do_local_perturb:
-    xt = np.zeros((nx * 2, maxItr))
+    xt = np.zeros((nx * 2, max_itr))
     xt[:, 0] = np.reshape(traj, (nx * 2, 1), order='C').ravel()
-    meas = np.zeros((maxItr,))  # Distance me
+    meas = np.zeros((max_itr,))  # Distance me
     dist0 = 0
-    for i in range(maxItr - 1):
+    for i in range(max_itr - 1):
         x = np.reshape(xt[:, i], (nx * 2, 1))
         # s, dist, index = human_feedback(x, human_cluster, point_cluster, obstacle)
         s, dist, index = human_feedback1(x, human, obstacle)
@@ -123,8 +132,5 @@ elif do_local_perturb:
         xt[:, i + 1] = xt[:, i] - eta * gt.ravel()  # gradient descent
 
     print(i)
-# x = np.reshape(xt[:, i], (nx * 2, 1))
-# workspace_plot(x, nx, human_cluster, obstacle, meas, human)
-#
-# plt.show()
-
+# visualization
+vis(human_cluster, obstacle, human_period, x_period)
