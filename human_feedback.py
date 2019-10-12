@@ -84,6 +84,7 @@ def get_score_from_human(point, point_cluster):
 def human_feedback1(x, human, obstacle):
     # human stand randomly
     score = 0
+    complaint = 0
     index = set()
     nx = np.shape(x)[0]//2
     radius = 0.5
@@ -108,7 +109,7 @@ def human_feedback1(x, human, obstacle):
                 score += 1
                 index.add(i)
                 index.add(i+1)
-
+    complaint = score
     # obstacle avoidance
     for num, polygon in obstacle.items():
         obs = Polygon(polygon)
@@ -134,4 +135,4 @@ def human_feedback1(x, human, obstacle):
         extra = [group[0]-k for k in range(1, num+1) if group[0]-k > 0] + \
                 [group[-1]+k for k in range(1, num+1) if group[-1]+k < nx]
         expand_index.update(set(extra))
-    return score, dist, list(expand_index)
+    return score, complaint, dist, list(expand_index)

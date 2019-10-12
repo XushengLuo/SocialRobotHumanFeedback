@@ -25,8 +25,8 @@ obstacle = {1: [(10.5, 9), (12.5, 9), (12.5, 11), (10.5, 11)]}
 human, point_cluster = get_cluster(human_cluster)
 do_local_perturb = 0  # sys.argv[1]
 # zero-order parameter
-max_period = 3
-max_itr = int(1e2)
+max_period = 20
+max_itr = int(40)
 
 eta = 1e-1  # Note: step size rule 1 does not work well when dimension is larger than 2  1e-2
 delta = 1e1  # exploration parameter
@@ -34,6 +34,7 @@ delta = 1e1  # exploration parameter
 nx = np.shape(traj)[1]
 x_period = np.zeros((nx * 2, max_period))
 human_period = {k: [] for k in range(max_period)}
+complaint_period = []
 if not do_local_perturb:
     for t in range(max_period):
         xt = np.zeros((nx * 2, max_itr))
@@ -43,7 +44,7 @@ if not do_local_perturb:
         for i in range(max_itr - 1):
             x = np.reshape(xt[:, i], (nx * 2, 1))
             # s, dist, index = human_feedback(x, human_cluster, point_cluster, obstacle)
-            s, dist, index = human_feedback1(x, human, obstacle)
+            s, complaint, dist, index = human_feedback1(x, human, obstacle)
             meas[i] = s
             # print(i, s - dist, dist)
             if np.fabs(dist - dist0) < 1 and s - dist < 1e-2:
@@ -59,11 +60,11 @@ if not do_local_perturb:
 
             x_plus = x + ut * delta
             # s_plus, _, _ = human_feedback(x_plus, human_cluster, point_cluster, obstacle)
-            s_plus, _, _ = human_feedback1(x_plus, human, obstacle)
+            s_plus, _, _, _ = human_feedback1(x_plus, human, obstacle)
 
             x_minus = x - ut * delta
             # s_minus, _, _ = human_feedback(x_minus, human_cluster, point_cluster, obstacle)
-            s_minus, _, _ = human_feedback1(x_minus, human, obstacle)
+            s_minus, _, _, _ = human_feedback1(x_minus, human, obstacle)
 
             gt = nx * 2 / 2 / delta * (s_plus - s_minus) * ut  # gradient
 
@@ -74,6 +75,7 @@ if not do_local_perturb:
         print(i)
         x_period[:, t] = xt[:, i]
         human_period[t] = human
+        complaint_period.append(complaint)
         # update human position
         human = update_cluster(human)
 
@@ -133,4 +135,4 @@ elif do_local_perturb:
 
     print(i)
 # visualization
-vis(human_cluster, obstacle, human_period, x_period)
+vis(human_cluster, obstacle, human_period, x_period, complaint_period)
