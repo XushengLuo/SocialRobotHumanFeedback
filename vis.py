@@ -3,14 +3,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
+from matplotlib import collections
 
 
 class RobotPath:
-    def __init__(self, robot_path, human_cluster, obstacle, human, complaint):
+    def __init__(self, robot_path, human_cluster, obstacle, human, complaint, human_scale):
         self.robot_path = robot_path
         self.human_cluster = human_cluster
         self.obstacle = obstacle
         self.human = human
+        self.human_scale = human_scale
         self.h = human[0]
         self.complaint = complaint
         self.nx = np.shape(self.robot_path)[0] // 2
@@ -49,8 +51,11 @@ def animate(i, ax, particles, particles_zone, cls_robot_path, period_template, p
     period_text.set_text(period_template % i)
     complaint_text.set_text(complaint_template % cls_robot_path.complaint[i])
 
+    # particles_zone.set_offsets(cls_robot_path.h)
+
+    patches = [plt.Circle((h[0], h[1]), radius=cls_robot_path.human_scale[i]) for i, h in enumerate(cls_robot_path.h)]
+    particles_zone.set_paths(patches)
     particles.set_offsets(cls_robot_path.h)
-    particles_zone.set_offsets(cls_robot_path.h)
 
     x = np.reshape(cls_robot_path.robot_path[:, i][0:cls_robot_path.nx], (cls_robot_path.nx, 1))
     y = np.reshape(cls_robot_path.robot_path[:, i][cls_robot_path.nx:2*cls_robot_path.nx], (cls_robot_path.nx, 1))
@@ -63,8 +68,8 @@ def animate(i, ax, particles, particles_zone, cls_robot_path, period_template, p
     return [particles] + [period_text] + [complaint_text] + [q]
 
 
-def vis(human_cluster, obstacle, human_period, x_period, complaint_period):
-    cls_robot_path = RobotPath(x_period, human_cluster, obstacle, human_period, complaint_period)
+def vis(human_cluster, obstacle, human_period, x_period, complaint_period, human_scale):
+    cls_robot_path = RobotPath(x_period, human_cluster, obstacle, human_period, complaint_period, human_scale)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.yaxis.tick_right()
@@ -75,11 +80,14 @@ def vis(human_cluster, obstacle, human_period, x_period, complaint_period):
     complaint_text = ax.text(0.35, 1.05, complaint_template % 0, transform=ax.transAxes, weight='bold')
 
     particles = ax.scatter([], [], c='tab:blue', s=10, cmap="hsv", vmin=0, vmax=1)
-    particles_zone = ax.scatter([], [], facecolors="None", edgecolors='tab:orange', s=200, cmap="hsv", vmin=0, vmax=1,
-                                alpha=1)
+    # particles_zone = ax.scatter([], [], facecolors="None", edgecolors='tab:orange', s=200, cmap="hsv", vmin=0, vmax=1,
+    #                             alpha=1)
+    circles = [plt.Circle((h[0], h[1]), radius=cls_robot_path.human_scale[i]) for i, h in enumerate(cls_robot_path.h)]
+    particles_zone = PatchCollection(circles, edgecolors='r', facecolors='none')
+    ax.add_artist(particles_zone)
 
     q = ax.quiver(np.zeros((cls_robot_path.nx-1, 1)), np.zeros((cls_robot_path.nx-1, 1)), [], [], scale_units='xy',
-                  angles='xy', scale=1, color='r')
+                  angles='xy', scale=1, color='g')
 
     max_frame = np.shape(x_period)[1]
     ani = anim.FuncAnimation(fig, animate, fargs=[ax, particles, particles_zone, cls_robot_path, period_template,
@@ -87,4 +95,4 @@ def vis(human_cluster, obstacle, human_period, x_period, complaint_period):
                              frames=max_frame, interval=30, blit=True, repeat=False)
     ani.save('/Users/chrislaw/Github/SocialRobotHumanFeedback/video/online.mp4', fps=0.5, dpi=400)
 
-    plt.show()
+    # plt.show()

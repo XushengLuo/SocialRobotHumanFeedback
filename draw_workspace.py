@@ -5,7 +5,7 @@ from matplotlib.collections import PatchCollection
 from termcolor import colored
 
 
-def workspace_plot(path, nx, polygon, obstacle, measure, human):
+def workspace_plot(path, nx, polygon, obstacle, measure, human, human_scale):
     """
     plot the workspace
     :return: figure
@@ -36,7 +36,7 @@ def workspace_plot(path, nx, polygon, obstacle, measure, human):
 
     x_pre = path[0:nx]
     y_pre = path[nx:2*nx]
-    plt.quiver(x_pre[:-1], y_pre[:-1], x_pre[1:] - x_pre[:-1], y_pre[1:] - y_pre[:-1], color='r',
+    plt.quiver(x_pre[:-1], y_pre[:-1], x_pre[1:] - x_pre[:-1], y_pre[1:] - y_pre[:-1], color='g',
                      scale_units='xy', angles='xy', scale=1)
 
     if human:
@@ -44,7 +44,7 @@ def workspace_plot(path, nx, polygon, obstacle, measure, human):
         yh = [h[1] for h in human]
         plt.plot(xh, yh, 'bo', markersize=3)
         for i in range(len(xh)):
-            circle = plt.Circle((xh[i], yh[i]), 0.5, color='r', fill=False)
+            circle = plt.Circle((xh[i], yh[i]), human_scale[i], color='r', fill=False)
             ax.add_artist(circle)
     ax.set_xlim((min([min(x_pre), 0]), max(x_pre)))
     ax.set_ylim((min([min(y_pre), 0]), max(y_pre)))

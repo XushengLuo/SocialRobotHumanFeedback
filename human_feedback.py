@@ -81,17 +81,16 @@ def get_score_from_human(point, point_cluster):
     return score
 
 
-def human_feedback1(x, human, obstacle):
+def human_feedback1(x, human, obstacle, human_scale):
     # human stand randomly
     score = 0
-    complaint = 0
     index = set()
     nx = np.shape(x)[0]//2
-    radius = 0.5
+    # radius = 0.5
     # complaint
     for i in range(nx - 1):
         p = [(x[i], x[i + nx]), (x[i + 1], x[i + 1 + nx])]
-        for h in human:
+        for ind, h in enumerate(human):
             cx = h[0]
             cy = h[1]
             # decide the shortest distance of a point to a line segment
@@ -105,7 +104,7 @@ def human_feedback1(x, human, obstacle):
                 d1 = (p[0][0] - cx) ** 2 + (p[0][1] - cy) ** 2
                 d2 = (p[1][0] - cx) ** 2 + (p[1][1] - cy) ** 2
                 d = np.sqrt(d1) if d1 <= d2 else np.sqrt(d2)
-            if d <= radius:
+            if d <= human_scale[ind]:
                 score += 1
                 index.add(i)
                 index.add(i+1)
@@ -123,7 +122,7 @@ def human_feedback1(x, human, obstacle):
     dist = np.sum([np.linalg.norm([x[i] - x[i + 1], x[i + nx] - x[i + 1 + nx]]) for i in range(nx - 1)])
     score += dist
 
-    # index
+    # indices of waypoints need to be perturbed
     index_group = []
     index = list(index)
     index.sort()

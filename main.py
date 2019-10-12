@@ -32,8 +32,8 @@ human_cluster = {1: [(5, 5), (8, 3), (9, 3), (9, 4), (7, 7), (5, 7)],
 # obstacle = {1: [(9, 9), (11, 9), (11, 11), (9, 11)]}
 obstacle = {1: [(10.5, 9), (12.5, 9), (12.5, 11), (10.5, 11)]}
 
-human, point_cluster = get_cluster(human_cluster)
-do_local_perturb = 0 # sys.argv[1]
+human, point_cluster, human_scale = get_cluster(human_cluster)
+do_local_perturb = 1  # sys.argv[1]
 # zero-order parameter
 maxItr = int(1e4)
 eta = 1e-1  # Note: step size rule 1 does not work well when dimension is larger than 2  1e-2
@@ -49,7 +49,7 @@ if not do_local_perturb:
     for i in range(maxItr - 1):
         x = np.reshape(xt[:, i], (nx * 2, 1))
         # s, dist, index = human_feedback(x, human_cluster, point_cluster, obstacle)
-        s, dist, index = human_feedback1(x, human, obstacle)
+        s, _, dist, _ = human_feedback1(x, human, obstacle, human_scale)
         meas[i] = s
         print(i, s - dist, dist)
         if np.fabs(dist - dist0) < 1 and s - dist < 1e-2:
@@ -65,11 +65,11 @@ if not do_local_perturb:
 
         x_plus = x + ut * delta
         # s_plus, _, _ = human_feedback(x_plus, human_cluster, point_cluster, obstacle)
-        s_plus, _, _ = human_feedback1(x_plus, human, obstacle)
+        s_plus, _, _, _ = human_feedback1(x_plus, human, obstacle, human_scale)
 
         x_minus = x - ut * delta
         # s_minus, _, _ = human_feedback(x_minus, human_cluster, point_cluster, obstacle)
-        s_minus, _, _ = human_feedback1(x_minus, human, obstacle)
+        s_minus, _, _, _ = human_feedback1(x_minus, human, obstacle, human_scale)
 
         gt = nx * 2 / 2 / delta * (s_plus - s_minus) * ut  # gradient
 
@@ -83,9 +83,9 @@ elif do_local_perturb:
     for i in range(maxItr - 1):
         x = np.reshape(xt[:, i], (nx * 2, 1))
         # s, dist, index = human_feedback(x, human_cluster, point_cluster, obstacle)
-        s, dist, index = human_feedback1(x, human, obstacle)
+        s, _, dist, index = human_feedback1(x, human, obstacle, human_scale)
         meas[i] = s
-        # print(i, s - dist, dist)
+        print(i, s - dist, dist)
         if np.fabs(dist - dist0) < 1 and s - dist < 1e-2:
             break
         dist0 = dist
@@ -116,10 +116,10 @@ elif do_local_perturb:
 
         x_plus = x + ut * delta
         # s_plus, _, _ = human_feedback(x_plus, human_cluster, point_cluster, obstacle)
-        s_plus, _, _ = human_feedback1(x_plus, human, obstacle)
+        s_plus, _, _, _ = human_feedback1(x_plus, human, obstacle, human_scale)
         x_minus = x - ut * delta
         # s_minus, _, _ = human_feedback(x_minus, human_cluster, point_cluster, obstacle)
-        s_minus, _, _ = human_feedback1(x_minus, human, obstacle)
+        s_minus, _, _, _ = human_feedback1(x_minus, human, obstacle, human_scale)
 
         gt = nx * 2 / 2 / delta * (s_plus - s_minus) * ut  # gradient
 
@@ -127,6 +127,6 @@ elif do_local_perturb:
 
     print(i)
 x = np.reshape(xt[:, i], (nx * 2, 1))
-workspace_plot(x, nx, human_cluster, obstacle, meas, human)
+workspace_plot(x, nx, human_cluster, obstacle, meas, human, human_scale)
 
 plt.show()
