@@ -16,7 +16,7 @@ traj = np.transpose(np.array(traj) * 20)
 
 human_cluster = {1: [(5, 5), (8, 3), (9, 3), (9, 4), (7, 7), (5, 7)],
                  2: [(13, 5), (15, 1), (16, 1), (16, 4), (14, 6), (13, 6)],
-                 3: [(14, 9), (18, 9), (18, 10), (14, 10)],
+                 3: [(14, 8), (18, 8), (18, 10), (14, 10)],
                  4: [(10, 12), (11, 12), (14, 13), (14, 14), (11, 16), (10, 16)],
                  5: [(5, 13), (6, 13), (6, 16), (3, 17), (2, 17), (2, 15)]}
 # obstacle = {1: [(9, 9), (11, 9), (11, 11), (9, 11)]}
@@ -26,7 +26,7 @@ human, point_cluster, human_scale = get_cluster(human_cluster)
 do_local_perturb = 1  # sys.argv[1]
 # zero-order parameter
 max_period = 40
-max_itr = int(40)
+max_itr = int(100)
 
 eta = 1e-1  # Note: step size rule 1 does not work well when dimension is larger than 2  1e-2
 delta = 1e1  # exploration parameter
@@ -100,11 +100,10 @@ elif do_local_perturb:
             dist0 = dist
             ut = np.random.random((nx * 2, 1)) * 2 - 1
             # local perturb
-            if do_local_perturb:
-                for j in range(1, nx):
-                    if j not in index:
-                        ut[j] = 0
-                        ut[j + nx] = 0
+            for j in range(1, nx):
+                if j not in index:
+                    ut[j] = 0
+                    ut[j + nx] = 0
             # keep the start and end still
             ut[0] = 0
             ut[nx - 1] = 0
@@ -114,7 +113,7 @@ elif do_local_perturb:
                 warnings.filterwarnings('error')
                 try:
                     ut = ut / np.linalg.norm(ut)
-                except Warning as e:
+                except Warning:
                     # in case all entries of ut are 0's
                     ut = np.random.random((nx * 2, 1))
                     ut[0] = 0

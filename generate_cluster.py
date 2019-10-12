@@ -16,15 +16,15 @@ def get_cluster(human_cluster):
                 human.append((p[0], p[1]))
                 point_cluster[index].append((p[0], p[1]))
                 break
-
-    scale = np.linspace(0.2, 0.5, 4)
-    human_scale = scale[np.random.randint(0, 4, len(human))]
+    num_scale = 5
+    scale = np.linspace(0.2, 0.2+(num_scale-1)*0.1, num_scale)
+    human_scale = scale[np.random.randint(0, num_scale, len(human))]
     return human, point_cluster, human_scale
 
 
 def update_cluster(human):
     new_human = []
-    radius = 0.5
+    radius = 1
     for h in human:
         ut = np.random.random((2, 1)) * 2 - 1
         ut = ut/np.linalg.norm(ut)
