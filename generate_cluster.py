@@ -34,14 +34,15 @@ def get_cluster(obstacle):
     while i < num_human:
         collision = 0
         p = np.random.random((1, 2))[0] * 20
-        for index, polygon in obstacle.items():
-            obs = Polygon(polygon)
-            if Point((p[0], p[1])).within(obs):
-                collision = 1
-                break
-        if not collision:
-            human.append((p[0], p[1]))
-            i += 1
+        if np.linalg.norm(np.subtract(p, (0, 0))) > 2 and np.linalg.norm(np.subtract(p, (20, 20))) > 2:
+            for index, polygon in obstacle.items():
+                obs = Polygon(polygon)
+                if Point((p[0], p[1])).within(obs):
+                    collision = 1
+                    break
+            if not collision:
+                human.append((p[0], p[1]))
+                i += 1
 
     num_scale = 4
     scale = np.linspace(0.3, 0.2+(num_scale-1)*0.1, num_scale)
@@ -58,7 +59,7 @@ def update_cluster(human, obstacle):
             ut = ut/np.linalg.norm(ut)
             p = (h[0]+ut[0][0]*random.uniform(0, radius), h[1]+ut[1][0]*random.uniform(0, radius))
             if 0 <= p[0] <= 20 and 0 <= p[1] <= 20:
-                if np.linalg.norm(np.subtract(p, (0, 0))) > 0.6 and np.linalg.norm(np.subtract(p, (20, 20))) > 0.6:
+                if np.linalg.norm(np.subtract(p, (0, 0))) > 2 and np.linalg.norm(np.subtract(p, (20, 20))) > 2:
                     collision = 0
                     for index, polygon in obstacle.items():
                         obs = Polygon(polygon)

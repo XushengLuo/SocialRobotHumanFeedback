@@ -109,14 +109,14 @@ def human_feedback1(x, human, obstacle, human_scale):
                 index.add(i+1)
 
     # obstacle avoidance
-    for num, poly in obstacle.items():
-        obs = Polygon(poly)
-        for i in range(nx - 1):
-            # whether the line segment crosses the (obstacle)
-            if LineString([Point((x[i], x[i + nx])), Point(x[i + 1], x[i + 1 + nx])]).intersects(obs):
-                score += 1
-                index.add(i)
-                index.add(i+1)
+    # for num, poly in obstacle.items():
+    #     obs = Polygon(poly)
+    #     for i in range(nx - 1):
+    #         # whether the line segment crosses the (obstacle)
+    #         if LineString([Point((x[i], x[i + nx])), Point(x[i + 1], x[i + 1 + nx])]).intersects(obs):
+    #             score += 1
+    #             index.add(i)
+    #             index.add(i+1)
     # complaints inludes human complaints and obstacles
     complaint = score
     # the length of the trajectory
@@ -131,7 +131,7 @@ def human_feedback1(x, human, obstacle, human_scale):
         index_group.append(list(map(itemgetter(1), g)))
     expand_index = set([j for i in index_group for j in i])
     for group in index_group:
-        num = np.random.randint(0, 3)
+        num = np.random.randint(0, 1)
         extra = [group[0]-k for k in range(1, num+1) if group[0]-k > 0] + \
                 [group[-1]+k for k in range(1, num+1) if group[-1]+k < nx]
         expand_index.update(set(extra))

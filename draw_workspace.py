@@ -4,6 +4,7 @@ from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from termcolor import colored
 import matplotlib
+import random
 
 
 def workspace_plot(path, nx, obstacle, measure, human, human_scale):
@@ -35,11 +36,14 @@ def workspace_plot(path, nx, obstacle, measure, human, human_scale):
             patches.append(polygon)
             p = PatchCollection(patches, facecolors=color[i], edgecolors=color[i], alpha=alpha[i])
             ax.add_collection(p)
-
-    x_pre = path[0:nx]
-    y_pre = path[nx:2*nx]
-    plt.quiver(x_pre[:-1], y_pre[:-1], x_pre[1:] - x_pre[:-1], y_pre[1:] - y_pre[:-1], color='g',
-                     scale_units='xy', angles='xy', scale=1)
+    c = {'x': 'r', 'x_m': 'g'}
+    for key, value in path.items():
+        x_pre = value[0:nx]
+        y_pre = value[nx:2 * nx]
+        # c = "#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+        plt.quiver(x_pre[:-1], y_pre[:-1], x_pre[1:] - x_pre[:-1], y_pre[1:] - y_pre[:-1], color=c[key],
+                   scale_units='xy', angles='xy', scale=1, label=r'${0}$'.format(key))
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
     if human:
         xh = [h[0] for h in human]

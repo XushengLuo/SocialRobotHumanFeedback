@@ -119,7 +119,7 @@ def regret_plot():
                     regret1 += acc_regret1
             regret = regret / repeat
             regret1 = regret1 / repeat
-            c = "#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+            c = "#" + ''.join([random.choice('0123456789ABCDEF') for k in range(6)])
             plt.plot(list(range(max_period)), regret, '--', color=c)
             plt.plot(list(range(max_period)), regret1, '-', color=c)
 
