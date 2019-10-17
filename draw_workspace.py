@@ -3,9 +3,10 @@ import numpy as np
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 from termcolor import colored
+import matplotlib
 
 
-def workspace_plot(path, nx, polygon, obstacle, measure, human, human_scale):
+def workspace_plot(path, nx, obstacle, measure, human, human_scale):
     """
     plot the workspace
     :return: figure
@@ -19,8 +20,9 @@ def workspace_plot(path, nx, polygon, obstacle, measure, human, human_scale):
 
     # plt.plot(path[0:nx], path[nx:2*nx], 'ro', markersize=3)
 
-    obj = [polygon, obstacle]
+    obj = [{}, obstacle]
     color = ['c', 'r']
+    alpha = [0.4, 1]
     for i, o in enumerate(obj):
         for poly in o.values():
             x = []
@@ -31,7 +33,7 @@ def workspace_plot(path, nx, polygon, obstacle, measure, human, human_scale):
                 y.append(point[1])
             polygon = Polygon(np.column_stack((x, y)), True)
             patches.append(polygon)
-            p = PatchCollection(patches, facecolors=color[i], edgecolors=color[i])
+            p = PatchCollection(patches, facecolors=color[i], edgecolors=color[i], alpha=alpha[i])
             ax.add_collection(p)
 
     x_pre = path[0:nx]
@@ -49,5 +51,11 @@ def workspace_plot(path, nx, polygon, obstacle, measure, human, human_scale):
     ax.set_xlim((min([min(x_pre), 0]), max(x_pre)))
     ax.set_ylim((min([min(y_pre), 0]), max(y_pre)))
 
+
     # ax = plt.figure(1).gca()
     # plt.plot(range(2, np.shape(measure)[0]+1), measure[1:])
+
+    plt.xticks([0, 5, 10, 15, 20], fontsize=16)
+    plt.yticks([0, 5, 10, 15, 20], fontsize=16)
+
+    matplotlib.rcParams.update({'font.size': 16})

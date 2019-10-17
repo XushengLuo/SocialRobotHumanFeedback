@@ -3,33 +3,76 @@ from shapely.geometry import Point, LineString, Polygon
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon as pl
 from matplotlib.collections import PatchCollection
+import random
+import sys
 
 
-def get_cluster(human_cluster):
-    point_cluster = {key: [] for key in human_cluster.keys()}
-    points = np.random.random((500, 2)) * 20
+# def get_cluster(human_cluster):
+#     point_cluster = {key: [] for key in human_cluster.keys()}
+#     human = []
+#     num_human = 50  # int(sys.argv[1])
+#     i = 0
+#     while i < num_human:
+#         p = np.random.random((1, 2))[0] * 20
+#         for index, polygon in human_cluster.items():
+#             cluster = Polygon(polygon)
+#             if Point((p[0], p[1])).within(cluster):
+#                 human.append((p[0], p[1]))
+#                 point_cluster[index].append((p[0], p[1]))
+#                 i += 1
+#                 break
+#     num_scale = 5
+#     scale = np.linspace(0.2, 0.2+(num_scale-1)*0.1, num_scale)
+#     human_scale = scale[np.random.randint(0, num_scale, len(human))]
+#     return human, point_cluster, human_scale
+
+
+def get_cluster(obstacle):
     human = []
-    for p in points:
-        for index, polygon in human_cluster.items():
-            cluster = Polygon(polygon)
-            if Point((p[0], p[1])).within(cluster):
-                human.append((p[0], p[1]))
-                point_cluster[index].append((p[0], p[1]))
+    num_human = 50  # int(sys.argv[1])
+    i = 0
+    while i < num_human:
+        collision = 0
+        p = np.random.random((1, 2))[0] * 20
+        for index, polygon in obstacle.items():
+            obs = Polygon(polygon)
+            if Point((p[0], p[1])).within(obs):
+                collision = 1
                 break
-    num_scale = 5
-    scale = np.linspace(0.2, 0.2+(num_scale-1)*0.1, num_scale)
+        if not collision:
+            human.append((p[0], p[1]))
+            i += 1
+
+    num_scale = 4
+    scale = np.linspace(0.3, 0.2+(num_scale-1)*0.1, num_scale)
     human_scale = scale[np.random.randint(0, num_scale, len(human))]
-    return human, point_cluster, human_scale
+    return human, human_scale
 
 
-def update_cluster(human):
+def update_cluster(human, obstacle):
     new_human = []
-    radius = 1
+    radius = 1  # float(sys.argv[2])
     for h in human:
-        ut = np.random.random((2, 1)) * 2 - 1
-        ut = ut/np.linalg.norm(ut)
-        new_human.append((h[0]+ut[0][0]*radius, h[1]+ut[1][0]*radius))
-    return new_human
+        while True:
+            ut = np.random.random((2, 1)) * 2 - 1
+            ut = ut/np.linalg.norm(ut)
+            p = (h[0]+ut[0][0]*random.uniform(0, radius), h[1]+ut[1][0]*random.uniform(0, radius))
+            if 0 <= p[0] <= 20 and 0 <= p[1] <= 20:
+                if np.linalg.norm(np.subtract(p, (0, 0))) > 0.6 and np.linalg.norm(np.subtract(p, (20, 20))) > 0.6:
+                    collision = 0
+                    for index, polygon in obstacle.items():
+                        obs = Polygon(polygon)
+                        if Point((p[0], p[1])).within(obs):
+                            collision = 1
+                            break
+                    if not collision:
+                        new_human.append(p)
+                        break
+
+    num_scale = 4
+    scale = np.linspace(0.3, 0.2 + (num_scale - 1) * 0.1, num_scale)
+    human_scale = scale[np.random.randint(0, num_scale, len(human))]
+    return new_human, human_scale
 
 # human_cluster = {1: [(5, 5), (8, 3), (9, 3), (9, 4), (7, 7), (5, 7)],
 #                  2: [(13, 5), (15, 1), (16, 1), (16, 4), (14, 6), (13, 6)],
