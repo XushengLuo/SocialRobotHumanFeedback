@@ -72,6 +72,10 @@ for s = 1: size(ref1, 2)-1
 end
 ref(:, end+1:end+K-1) = repmat(ref(:, end), 1, K-1);   % K-1 final states
 ref(3, :) = zeros(1, size(ref, 2));
+for k = 1:size(refx, 2)-1
+    ref(3, k) = atan2(refy(k+1)-refy(k), refx(k+1)-refx(k));
+end
+
 Q = diag(repmat([25;25],K,1));
 R = diag(repmat([10; 1],K,1));  % the weighting matrices are important
 % true initial state
@@ -191,7 +195,7 @@ end
     function penalty_obs = obs_avoid(x, xv, yv)
         penalty_obs = 0;
         epsilon = 1e-8;
-        n = 3;
+        n = 10;
         xp = [];
         yp = [];
         for i = 1:size(x,2)-1

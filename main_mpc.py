@@ -1,3 +1,6 @@
+"""
+Michael's advice
+"""
 from workspace import Workspace
 import matplotlib.pyplot as plt
 import pickle
@@ -38,11 +41,6 @@ human_cluster = {1: [(5, 5), (8, 3), (9, 3), (9, 4), (7, 7), (5, 7)],
 obstacle = {1: [(7, 4), (9, 4), (9, 6), (7, 6)],
             2: [(10, 12), (12, 12), (12, 14), (10, 14)]}
 
-obs = {3: [(13, 19), (17, 19), (17, 20), (13, 20)],
-       4: [(13, 16), (14, 16), (14, 19), (13, 19)],
-       5: [(13, 15), (17, 15), (17, 16), (13, 16)]}
-obstacle.update(obs)
-
 do_local_perturb = 1
 both = 0
 # zero-order parameter
@@ -53,13 +51,13 @@ delta = 1e1  # exploration parameter
 nx = np.shape(traj)[1]
 
 for ii in range(1):   # number of updates of human positions
-    human, human_scale = get_cluster(human_cluster)
-    with open('data/human', 'wb') as filehandle:
-        pickle.dump(human, filehandle)
-        pickle.dump(human_scale, filehandle)
-    # with open('data/human', 'rb') as filehandle:
-    #     human = pickle.load(filehandle)
-    #     human_scale = pickle.load(filehandle)
+    # human, human_scale = get_cluster(human_cluster)
+    # with open('data/human', 'wb') as filehandle:
+    #     pickle.dump(human, filehandle)
+    #     pickle.dump(human_scale, filehandle)
+    with open('data/human', 'rb') as filehandle:
+        human = pickle.load(filehandle)
+        human_scale = pickle.load(filehandle)
     # full perturb
     if not do_local_perturb or both:
         xt = np.zeros((nx * 2, maxItr))
@@ -104,16 +102,14 @@ for ii in range(1):   # number of updates of human positions
     # local perturb
     if do_local_perturb or both:
         xt = np.zeros((nx * 2, maxItr))
-        # traj = traj_matlab(np.reshape(traj, (nx * 2, 1), order='C').ravel(), nx) # using motion planner path
-        xt[:, 0] = np.reshape(traj, (nx * 2, 1), order='C').ravel()   # traj  # using motion planner path
+        traj = traj_matlab(np.reshape(traj, (nx * 2, 1), order='C').ravel(), nx)  # using motion planner path
+        xt[:, 0] = traj  # using motion planner path
         meas = np.zeros((maxItr,))  # Distance me
         dist0 = 0
         for i in range(maxItr - 1):
             # call matlab then get bandit human feedback
             x = np.reshape(xt[:, i], (nx * 2, 1))
-            x_matlab = traj_matlab(x, nx)  # do not use motion planner path
-            s, _, dist, index = human_feedback1(xt[:, i], x_matlab, human, obstacle, human_scale)  # do not use motion planner path
-            # s, _, dist, index = human_feedback1(x, human, obstacle, human_scale)  # using motion planner path
+            s, _, dist, index = human_feedback1(x, human, obstacle, human_scale)  # using motion planner path
             meas[i] = s
             print(i, (s - dist)/10, index)
             if s - dist < 1e-2:  # np.fabs(dist - dist0) < 1 and
@@ -145,16 +141,17 @@ for ii in range(1):   # number of updates of human positions
             # call matlab then get bandit human feedback
             x_plus = x + ut * delta
             x_plus_matlab = traj_matlab(x_plus, nx)
-            s_plus, _, _, _ = human_feedback1(x_plus.ravel(), x_plus_matlab, human, obstacle, human_scale)
+            s_plus, _, _, _ = human_feedback1(x_plus_matlab, human, obstacle, human_scale)
             # call matlab then get bandit human feedback
             x_minus = x - ut * delta
             x_minus_matlab = traj_matlab(x_minus, nx)
-            s_minus, _, _, _ = human_feedback1(x_minus.ravel(), x_minus_matlab, human, obstacle, human_scale)
+            s_minus, _, _, _ = human_feedback1(x_minus_matlab, human, obstacle, human_scale)
 
             gt = nx * 2 / 2 / delta * (s_plus - s_minus) * ut  # gradient
-            xt[:, i + 1] = xt[:, i] - eta * gt.ravel()  # gradient descent
+            x_new = xt[:, i] - eta * gt.ravel()  # gradient descent
+            xt[:, i + 1] = traj_matlab(x_new, nx)
 
-            path = {'x': x, 'x_m': x_matlab}
+            path = {'x': x}
             workspace_plot(path, nx, obstacle, meas, human, human_scale)
             plt.draw()
             plt.pause(10)
@@ -165,7 +162,7 @@ for ii in range(1):   # number of updates of human positions
         ty = matlab.double(np.reshape(x[nx:], (1, nx))[0].tolist())
         x_matlab = eng.trajectory_following(tx, ty)
         x_matlab = np.hstack(((x_matlab[0]), x_matlab[1]))
-        path = {'x': x, 'x_m': x_matlab}
+        path = {'x': x}
         workspace_plot(path, nx, obstacle, meas, human, human_scale)
         plt.show()
 
