@@ -121,9 +121,11 @@ def human_feedback1(x0, x, human, obstacle, human_scale):
 
     # the length of the trajectory
     dist = 0  # np.sum([np.linalg.norm([x[i] - x[i + 1], x[i + nx] - x[i + 1 + nx]]) for i in range(nx - 1)])
-    diff = x - x0
-    dist = dist + np.sum([np.linalg.norm([(diff[i], diff[i + nx])]) for i in range(nx)])
-    score = score * 10 + dist
+    # diff = x - x0
+    # dist = dist + np.sum([np.linalg.norm([(diff[i], diff[i + nx])]) for i in range(nx)])
+    dist = dist + np.linalg.norm(x-x0)
+    dist = dist
+    score = (score * 10 + dist)
 
     # indices of waypoints need to be perturbed
     index_group = []
@@ -133,7 +135,7 @@ def human_feedback1(x0, x, human, obstacle, human_scale):
         index_group.append(list(map(itemgetter(1), g)))
     expand_index = set([j for i in index_group for j in i])
     for group in index_group:
-        num = np.random.randint(0, 2)
+        num = np.random.randint(0, 1)
         extra = [group[0]-k for k in range(1, num+1) if group[0]-k > 0] + \
                 [group[-1]+k for k in range(1, num+1) if group[-1]+k < nx]
         expand_index.update(set(extra))

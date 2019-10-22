@@ -31,7 +31,7 @@ def get_cluster(obstacle):
     human = []
     # human += [(15, random.uniform(15, 20)) for i in range(4)]
     # human += [(random.uniform(15, 20), 15) for i in range(4)]
-    num_human = 50 - len(human) # int(sys.argv[1])
+    num_human = 50  # int(sys.argv[1])  # 70 - len(human)  # int(sys.argv[1])
     i = 0
     while i < num_human:
         collision = 0
@@ -54,7 +54,7 @@ def get_cluster(obstacle):
 
 def update_cluster(human, obstacle):
     new_human = []
-    radius = 1  # float(sys.argv[2])
+    radius = float(sys.argv[2])
     for h in human:
         while True:
             ut = np.random.random((2, 1)) * 2 - 1
