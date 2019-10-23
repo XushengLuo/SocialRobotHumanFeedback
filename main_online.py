@@ -21,19 +21,19 @@ def traj_matlab(x, nx):
 
 eng = matlab.engine.start_matlab()
 
-traj0 = [(0.3, 0), (0.34, 0.09), (0.35, 0.19), (0.37, 0.29), (0.39, 0.33), (0.41, 0.42),
-        (0.44, 0.51), (0.46, 0.57), (0.5, 0.65), (0.57, 0.73), (0.61, 0.78), (0.67, 0.86),
-        (1, 1)]
+traj0 = [(0, 0), (0.08, 0.06),  (0.24, 0.15), (0.31, 0.21),  (0.41, 0.3), (0.47, 0.36),
+        (0.54, 0.43), (0.65, 0.55), (0.72, 0.62), (0.8, 0.7), (0.85, 0.77), (0.87, 0.81),
+        (0.94, 0.91), (0.98, 0.98), (1, 1)]
 traj0 = np.transpose(np.array(traj0) * 20)
 
-obstacle = {1: [(10.5, 9), (12.5, 9), (12.5, 11), (10.5, 11)],
-            2: [(4, 9), (6, 9), (6, 11), (4, 11)]}
+obstacle = {1: [(7, 4), (9, 4), (9, 6), (7, 6)],
+            2: [(10, 12), (12, 12), (12, 14), (10, 14)]}
 
 do_local_perturb = 1
-both = 0
+both = 1
 # zero-order parameter
-max_period = 3
-max_itr = 2
+max_period = 50
+max_itr = int(sys.argv[1])
 
 eta = 1e-1  # Note: step size rule 1 does not work well when dimension is larger than 2  1e-2
 delta = 1e1  # exploration parameter
@@ -44,15 +44,15 @@ if not do_local_perturb or both:
     # container
     x_period = np.zeros((nx * 2, max_period))
     human_period = {k: [] for k in range(max_period)}
-    complaint_period = np.zeros((max_itr, max_period))
-    acc_regret = np.zeros((max_itr, max_period))
+    complaint_period = np.zeros((max_itr+1, max_period))
+    acc_regret = np.zeros((max_itr+1, max_period))
     traj = list(traj0)
 if do_local_perturb or both:
     # container
     x_period1 = np.zeros((nx * 2, max_period))
     human_period1 = {k: [] for k in range(max_period)}
-    complaint_period1 = np.zeros((max_itr, max_period))
-    acc_regret1 = np.zeros((max_itr, max_period))
+    complaint_period1 = np.zeros((max_itr+1, max_period))
+    acc_regret1 = np.zeros((max_itr+1, max_period))
     traj1 = list(traj0)
 
 human, human_scale = get_cluster(obstacle)
@@ -60,16 +60,21 @@ human, human_scale = get_cluster(obstacle)
 for t in tqdm(range(max_period)):
     if not do_local_perturb or both:
         # inner iteraions within one period
-        xt = np.zeros((nx * 2, max_itr))
+        xt = np.zeros((nx * 2, max_itr+1))
         xt[:, 0] = np.reshape(traj, (nx * 2, 1), order='C').ravel()
         dist0 = 0
-        for i in range(max_itr - 1):
-            eta = 1e-1
+        eta = 1e-1
+        succ = False
+        for i in range(max_itr):
+
             x = np.reshape(xt[:, i], (nx * 2, 1))
             x_matlab = traj_matlab(x, nx)
             s, complaint, dist, index = human_feedback1(xt[:, i], x_matlab, human, obstacle, human_scale)
+            # collect complaint
+            complaint_period[i][t] = complaint
             # print(i, s - dist, dist)
-            if  s - dist < 1e-2:
+            if s - dist < 1e-2:
+                succ = True
                 break
             dist0 = dist
             ut = np.random.random((nx * 2, 1)) * 2 - 1
@@ -86,12 +91,17 @@ for t in tqdm(range(max_period)):
             s_plus, _, _, _ = human_feedback1(x_plus.ravel(), x_plus_matlab, human, obstacle, human_scale)
             # call matlab then get bandit human feedback
             x_minus = x - ut * delta
+            x_minus_matlab = traj_matlab(x_minus, nx)
             s_minus, _, _, _ = human_feedback1(x_minus.ravel(), x_minus_matlab, human, obstacle, human_scale)
 
             gt = nx * 2 / 2 / delta * (s_plus - s_minus) * ut  # gradient
             xt[:, i + 1] = xt[:, i] - eta * gt.ravel()  # gradient descent
-            # collect complaint
-            complaint_period[i][t] = complaint
+
+        if not succ:
+            x = np.reshape(xt[:, i+1], (nx * 2, 1))
+            x_matlab = traj_matlab(x, nx)
+            s, complaint, dist, index = human_feedback1(xt[:, i+1], x_matlab, human, obstacle, human_scale)
+            complaint_period[i+1][t] = complaint
 
         # initial traj for the next period
         traj = x_matlab
@@ -109,13 +119,17 @@ for t in tqdm(range(max_period)):
         xt1 = np.zeros((nx * 2, max_itr+1))
         xt1[:, 0] = np.reshape(traj1, (nx * 2, 1), order='C').ravel()
         dist0 = 0
+        succ = False
         # inner iterations within one period
         for i in range(max_itr):
             x = np.reshape(xt1[:, i], (nx * 2, 1))
             x_matlab = traj_matlab(x, nx)  # do not use motion planner path
             s,  complaint, dist, index = human_feedback1(xt1[:, i], x_matlab, human, obstacle, human_scale)
             # print(i, s - dist, dist)
+            complaint_period1[i][t] = complaint
+
             if s - dist < 1e-2:
+                succ = True
                 break
             dist0 = dist
             ut = np.random.random((nx * 2, 1)) * 2 - 1
@@ -150,10 +164,14 @@ for t in tqdm(range(max_period)):
             x_minus_matlab = traj_matlab(x_minus, nx)
             s_minus, _, _, _ = human_feedback1(x_minus.ravel(), x_minus_matlab, human, obstacle, human_scale)
 
-            gt = nx * 2 / 2 / delta * (s_plus - s_minus) * ut  # gradient
+            gt = np.count_nonzero(ut) / 2 / delta * (s_plus - s_minus) * ut  # gradient
             xt1[:, i + 1] = xt1[:, i] - eta1 * gt.ravel()  # gradient descent
 
-            complaint_period1[i][t] = complaint
+        if not succ:
+            x = np.reshape(xt1[:, i + 1], (nx * 2, 1))
+            x_matlab = traj_matlab(x, nx)
+            s, complaint, dist, index = human_feedback1(xt1[:, i + 1], x_matlab, human, obstacle, human_scale)
+            complaint_period1[i + 1][t] = complaint
         # initial traj for the next period
         traj1 = x_matlab
         # print('local', t, i)
@@ -165,12 +183,8 @@ for t in tqdm(range(max_period)):
 
 # calculate accumulative regret
 if not do_local_perturb or both:
-    for i in range(len(complaint_period)):
+    for i in range(max_period):
         acc_regret[:, i] = acc_regret[:, i - 1] + complaint_period[:, i] if i > 0 else complaint_period[:, i]
-
-    # visualization
-    # vis(human_cluster, obstacle, human_period, x_period, complaint_period, human_scale)
-    # regret_plot(acc_regret)
 
 if do_local_perturb or both:
     for i in range(max_period):

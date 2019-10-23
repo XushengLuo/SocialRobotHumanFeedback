@@ -107,10 +107,11 @@ def regret_plot():
     plt.grid(b=True, which='major', color='k', linestyle='--')
     max_period = 4
     repeat = 2
+    max_itr = 2
     for i in [10, 20, 30]:
         for j in [3, 5, 10]:
-            regret = np.zeros((1, max_period)).ravel()
-            regret1 = np.zeros((1, max_period)).ravel()
+            regret = np.zeros((max_itr, max_period))
+            regret1 = np.zeros((max_itr, max_period))
             for k in range(1, repeat + 1):
                 with open('data/{0}_{1}_{2}'.format(i, j, k), 'rb') as filehandle:
                     acc_regret = pickle.load(filehandle)
