@@ -32,8 +32,8 @@ obstacle = {1: [(7, 4), (9, 4), (9, 6), (7, 6)],
 do_local_perturb = 1
 both = 1
 # zero-order parameter
-max_period = 50
-max_itr = int(sys.argv[1])
+max_period = 30
+max_itr = 100  # int(sys.argv[1])
 
 eta = 1e-1  # Note: step size rule 1 does not work well when dimension is larger than 2  1e-2
 delta = 1e1  # exploration parameter
@@ -44,20 +44,30 @@ if not do_local_perturb or both:
     # container
     x_period = np.zeros((nx * 2, max_period))
     human_period = {k: [] for k in range(max_period)}
-    complaint_period = np.zeros((max_itr+1, max_period))
-    acc_regret = np.zeros((max_itr+1, max_period))
+    complaint_period = np.zeros((3, max_period))
+    acc_regret = np.zeros((3, max_period))
     traj = list(traj0)
 if do_local_perturb or both:
     # container
     x_period1 = np.zeros((nx * 2, max_period))
     human_period1 = {k: [] for k in range(max_period)}
-    complaint_period1 = np.zeros((max_itr+1, max_period))
-    acc_regret1 = np.zeros((max_itr+1, max_period))
+    complaint_period1 = np.zeros((3, max_period))
+    acc_regret1 = np.zeros((3, max_period))
     traj1 = list(traj0)
+
+# complaint_period_initial = np.zeros((1, max_period))
+traj_init = list(traj0)
+traj_init1 = np.reshape(traj_init, (nx * 2, 1), order='C').ravel()
+x_matlab_init = traj_matlab(np.reshape(traj_init1, (nx * 2, 1)), nx)
 
 human, human_scale = get_cluster(obstacle)
 
 for t in tqdm(range(max_period)):
+
+    _, complaint_init, _, _ = human_feedback1(traj_init1, x_matlab_init, human, obstacle, human_scale)
+    complaint_period[0][t] = complaint_init
+    complaint_period1[0][t] = complaint_init
+
     if not do_local_perturb or both:
         # inner iteraions within one period
         xt = np.zeros((nx * 2, max_itr+1))
@@ -70,8 +80,9 @@ for t in tqdm(range(max_period)):
             x = np.reshape(xt[:, i], (nx * 2, 1))
             x_matlab = traj_matlab(x, nx)
             s, complaint, dist, index = human_feedback1(xt[:, i], x_matlab, human, obstacle, human_scale)
-            # collect complaint
-            complaint_period[i][t] = complaint
+            if i == 0:
+                # collect complaint
+                complaint_period[1][t] = complaint
             # print(i, s - dist, dist)
             if s - dist < 1e-2:
                 succ = True
@@ -101,7 +112,9 @@ for t in tqdm(range(max_period)):
             x = np.reshape(xt[:, i+1], (nx * 2, 1))
             x_matlab = traj_matlab(x, nx)
             s, complaint, dist, index = human_feedback1(xt[:, i+1], x_matlab, human, obstacle, human_scale)
-            complaint_period[i+1][t] = complaint
+            complaint_period[2][t] = complaint
+        else:
+            complaint_period[2][t] = complaint
 
         # initial traj for the next period
         traj = x_matlab
@@ -109,9 +122,6 @@ for t in tqdm(range(max_period)):
         x_period[:, t] = x_matlab
         human_period[t] = human
 
-        # x = np.reshape(xt[:, i], (nx * 2, 1))
-        # workspace_plot(x, nx, human_cluster, obstacle, meas, human)
-        # plt.show()
 
     if do_local_perturb or both:
         # inner iteraions within one period
@@ -126,7 +136,9 @@ for t in tqdm(range(max_period)):
             x_matlab = traj_matlab(x, nx)  # do not use motion planner path
             s,  complaint, dist, index = human_feedback1(xt1[:, i], x_matlab, human, obstacle, human_scale)
             # print(i, s - dist, dist)
-            complaint_period1[i][t] = complaint
+            if i == 0:
+                # collect complaint
+                complaint_period1[1][t] = complaint
 
             if s - dist < 1e-2:
                 succ = True
@@ -171,7 +183,10 @@ for t in tqdm(range(max_period)):
             x = np.reshape(xt1[:, i + 1], (nx * 2, 1))
             x_matlab = traj_matlab(x, nx)
             s, complaint, dist, index = human_feedback1(xt1[:, i + 1], x_matlab, human, obstacle, human_scale)
-            complaint_period1[i + 1][t] = complaint
+            complaint_period1[2][t] = complaint
+        else:
+            complaint_period1[2][t] = complaint
+
         # initial traj for the next period
         traj1 = x_matlab
         # print('local', t, i)
@@ -180,6 +195,15 @@ for t in tqdm(range(max_period)):
 
     # update human position
     human, human_scale = update_cluster(human, obstacle)
+
+# x = np.reshape(traj_init1, (nx * 2, 1))
+# workspace_plot(x, nx, obstacle, [], human, human_scale)
+# x = np.reshape(x_period[:, -1], (nx * 2, 1))
+# workspace_plot(x, nx, obstacle, [], human, human_scale)
+# x = np.reshape(x_period1[:, -1], (nx * 2, 1))
+# workspace_plot(x, nx, obstacle, [], human, human_scale)
+
+# plt.show()
 
 # calculate accumulative regret
 if not do_local_perturb or both:
@@ -195,7 +219,7 @@ if do_local_perturb or both:
     # regret_plot(acc_regret1)
 
 # max_itr_radius_repeat
-with open('data/{0}_{1}_{2}'.format(int(sys.argv[1]), int(float(sys.argv[2])*10), int(sys.argv[3])), 'wb') as filehandle:
+with open('data/correct{0}_{1}_{2}'.format(int(sys.argv[1]), int(float(sys.argv[2])*10), int(sys.argv[3])), 'wb') as filehandle:
     pickle.dump(acc_regret, filehandle)
     pickle.dump(acc_regret1, filehandle)
 

@@ -11,11 +11,11 @@
 # done
 
 
-for k in 5
+for r in 1 0.3
 do
-    for r in 0.3 1
+    for k in 1 2 3 4
     do
-        for((i=1; i<=5;i++))
+        for((i=1; i<=3;i++))
         do
             echo "max_iter = ${k}, radius = ${r}, repeat = ${i}"
             /usr/local/Cellar/python/3.6.3/Frameworks/Python.framework/Versions/3.6/bin/python3.6 /Users/chrislaw/Github/SocialRobotHumanFeedback/main_online.py ${k} ${r} ${i}

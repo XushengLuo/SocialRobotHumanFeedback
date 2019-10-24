@@ -208,6 +208,8 @@ end
         end
         penalty_obs = sum(1./(min(abs(d)) + epsilon));
         
+        penalty_obs = penalty_obs + (sum(xp<0) + sum(xp>20) ...
+            + sum(yp<0) + sum(yp>20)) * 5e2;
 %         for i = 1:size(x,2)-1
 %             penalty_obs = penalty_obs + 1./(min(min(abs(d(:,i:i+n)))) + epsilon);
 %         end

@@ -50,12 +50,10 @@ do_local_perturb = 1
 both = 0
 # zero-order parameter
 maxItr = 100
-# eta =
-# eta = 1e-1  # Note: step size rule 1 does not work well when dimension is larger than 2  1e-2
 delta = 1e1  # exploration parameter
 
 nx = np.shape(traj)[1]
-
+full = None
 for ii in (range(1)):   # number of updates of human positions
     human, human_scale = get_cluster(obstacle)
     # with open('data/human', 'wb') as filehandle:
@@ -77,8 +75,9 @@ for ii in (range(1)):   # number of updates of human positions
             x_matlab = traj_matlab(x, nx)
             s, _, dist, _ = human_feedback1(xt[:, i], x_matlab, human, obstacle, human_scale)
             meas[i] = s
-            # print(i, (s - dist)/10)
+            print(i, (s - dist)/10)
             if s - dist < 1e-2:  # np.fabs(dist - dist0) < 1 and
+                full = x_matlab
                 break
             dist0 = dist
             ut = np.random.random((nx * 2, 1)) * 2 - 1
@@ -113,19 +112,16 @@ for ii in (range(1)):   # number of updates of human positions
     if do_local_perturb or both:
         eta1 = 5e-1
         xt = np.zeros((nx * 2, maxItr))
-        # traj = traj_matlab(np.reshape(traj, (nx * 2, 1), order='C').ravel(), nx) # using motion planner path
-        xt[:, 0] = np.reshape(traj, (nx * 2, 1), order='C').ravel()   # traj  # using motion planner path
-        # xt[:, 0] = traj_matlab(np.reshape(xt[:, 0], (nx * 2, 1)), nx)  # do not use motion planner path
+        xt[:, 0] = np.reshape(traj, (nx * 2, 1), order='C').ravel()
         meas = np.zeros((maxItr,))  # Distance me
         dist0 = 0
         for i in (range(maxItr - 1)):
             # call matlab then get bandit human feedback
             x = np.reshape(xt[:, i], (nx * 2, 1))
             x_matlab = traj_matlab(x, nx)  # do not use motion planner path
-            s, _, dist, index = human_feedback1(xt[:, i], x_matlab, human, obstacle, human_scale)  # do not use motion planner path
-            # s, _, dist, index = human_feedback1(x, human, obstacle, human_scale)  # using motion planner path
+            s, _, dist, index = human_feedback1(xt[:, i], x_matlab, human, obstacle, human_scale)
             meas[i] = s
-            # print(i, (s - dist)/10, index)
+            print(i, (s - dist)/10, index)
             if s - dist < 1e-2:  # np.fabs(dist - dist0) < 1 and
                 break
             dist0 = dist
@@ -171,10 +167,11 @@ for ii in (range(1)):   # number of updates of human positions
         dist = np.sum([np.linalg.norm([x_matlab[i] - x_matlab[i + 1], x_matlab[i + nx] - x_matlab[i + 1 + nx]])
                        for i in range(nx - 1)])
         print(i, dist, end=',')
-    # path = {'x': x, 'x_m': x_matlab}
-    # workspace_plot(path, nx, obstacle, meas, human, human_scale)
-    # plt.show()
-
+    path = {r'$\mathbf{x}_0$': np.reshape(traj, (nx * 2, 1), order='C').ravel(),
+            r'$\mathbf{x}_{\mathrm{zero}}$': x, r'$\mathbf{x}_{\mathrm{MPC}}$': x_matlab}
+    workspace_plot(path, nx, obstacle, meas, human, human_scale)
+    plt.savefig('/Users/chrislaw/Box Sync/Research/Zero_Opt2019/fig/demo.pdf', format="pdf")
+    plt.show()
     print('')
 eng.quit()
 # x = np.reshape(xt[:, i], (nx * 2, 1))

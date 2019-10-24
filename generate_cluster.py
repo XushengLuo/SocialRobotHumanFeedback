@@ -54,7 +54,7 @@ def get_cluster(obstacle):
 
 def update_cluster(human, obstacle):
     new_human = []
-    radius = float(sys.argv[2])
+    radius = 0.3  # float(sys.argv[2])
     for h in human:
         while True:
             ut = np.random.random((2, 1)) * 2 - 1
