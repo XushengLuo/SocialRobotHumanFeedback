@@ -79,7 +79,7 @@ for k = 1:size(ref, 2)-1
     ref(3, k) = atan2(ref(2, k+1)-ref(2, k), ref(1, k+1)-ref(1, k));
 end
 
-Q = diag([repmat([25;25],K-1,1); 25; 25]);
+Q = diag(repmat([25;25],K,1));
 R = diag(repmat([10; 1],K,1));  % the weighting matrices are important
 % true initial state
 x0 = ref(:, 1); 
@@ -164,10 +164,14 @@ end
     % collision
     x = x(1:2, 2:end);
     penalty_obs = obs_avoid(x, xv, yv);
+    penalty_goal = goal_orient(x, [20; 20]);
     x = x(:);
     %     penalty_goal = goal_oriented(x, ref1(:, end));
     J = (xRef(:) - x)' * Q * (xRef(:) - x) + 50 * penalty_obs ...
-            + u' * R * u;
+            + u' * R * u + 0.1 * penalty_goal;
+        
+%     disp([(xRef(:) - x)' * Q * (xRef(:) - x), 50 * penalty_obs, ...
+%         u' * R * u, 20 * penalty_goal]);
     end
 
     function [c, ceq] = ineq_constraint(u, uMax, uMin, K)
@@ -208,12 +212,19 @@ end
         end
         penalty_obs = sum(1./(min(abs(d)) + epsilon));
         
-        penalty_obs = penalty_obs + (sum(xp<0) + sum(xp>20) ...
-            + sum(yp<0) + sum(yp>20)) * 5e2;
+        penalty_obs = penalty_obs + (sum(abs(xp(xp<0))) + sum(xp(xp>20)-20) ...
+            + sum(abs(yp(yp<0))) + sum(yp(yp>20)-20));
 %         for i = 1:size(x,2)-1
 %             penalty_obs = penalty_obs + 1./(min(min(abs(d(:,i:i+n)))) + epsilon);
 %         end
 
 %         penalty_obs = penalty_obs - sum(1./(sqrt((xp - 10.2).^2 + (yp - 17.6).^2) + epsilon));
+    end
+
+    function penalty_goal = goal_orient(x, goal)
+        penalty_goal = 0;
+        for i = 1:size(x, 2)
+            penalty_goal = penalty_goal + norm(x(:,i)-goal)^2;
+        end
     end
 end

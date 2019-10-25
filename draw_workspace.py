@@ -19,20 +19,20 @@ def workspace_plot(path, nx, obstacle, measure, human, human_scale):
     plt.gca().set_aspect('equal', adjustable='box')
     plt.grid(b=True, which='major', color='k', linestyle='--')
 
-    c = {'x': 'r', 'x_m': 'g'}
-    # c = {r'$\mathbf{x}_0$': 'r', r'$\mathbf{x}_{\mathrm{zero}}$': 'g', r'$\mathbf{x}_{\mathrm{MPC}}$': 'b'}
+    # c = {'x': 'r', 'x_m': 'g'}
+    c = {r'$\mathbf{x}_0$': 'r', r'$\mathbf{x}_{\mathrm{zero}}$': 'g', r'$\mathbf{x}_{\mathrm{MPC}}$': 'b'}
 
     for key, value in path.items():
         x_pre = value[0:nx]
         y_pre = value[nx:2 * nx]
         # c = "#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
-        plt.quiver(x_pre[:-1], y_pre[:-1], x_pre[1:] - x_pre[:-1], y_pre[1:] - y_pre[:-1], color=c[key],
-                   scale_units='xy', angles='xy', scale=1, label=r'${0}$'.format(key))
         # plt.quiver(x_pre[:-1], y_pre[:-1], x_pre[1:] - x_pre[:-1], y_pre[1:] - y_pre[:-1], color=c[key],
-        #        scale_units='xy', angles='xy', scale=1)
-    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    # plt.legend([r'$\mathbf{x}_0$', r'$\mathbf{x}_{\mathrm{zero}}$', r'$\mathbf{x}_{\mathrm{MPC}}$'], fontsize=14,
-    #            loc='center left', bbox_to_anchor=(1, 0.5))
+        #            scale_units='xy', angles='xy', scale=1, label=r'${0}$'.format(key))
+        plt.quiver(x_pre[:-1], y_pre[:-1], x_pre[1:] - x_pre[:-1], y_pre[1:] - y_pre[:-1], color=c[key],
+               scale_units='xy', angles='xy', scale=1)
+    # plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.legend([r'$\mathbf{x}_0$', r'$\mathbf{x}_{\mathrm{zero}}$', r'$\mathbf{x}_{\mathrm{MPC}}$'], fontsize=14,
+               loc='center left', bbox_to_anchor=(1, 0.5))
 
     obj = [{}, obstacle]
     color = ['c', 'r']
